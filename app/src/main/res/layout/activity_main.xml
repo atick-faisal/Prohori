@@ -8,11 +8,19 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/sendButton"
+        android:id="@+id/userDataButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="64dp"
-        android:text="Send Request"/>
+        android:text="Send Info"/>
+
+    <Button
+        android:id="@+id/locationDataButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="64dp"
+        android:text="Send Location"/>
 
 </LinearLayout>

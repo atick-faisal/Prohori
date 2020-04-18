@@ -1,18 +1,17 @@
 package ai.atick.coronago
 
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.Volley
 import kotlinx.android.synthetic.main.activity_main.*
-import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var networkActivity: NetworkActivity
+    private lateinit var locationActivity: LocationActivity
+
     private var userUrl: String = "http://home.jamiussiam.com:8090/user"
+    private var locationUrl: String = "http://home.jamiussiam.com:8090/location"
+    // network security config was required for http request //
 
     // --------- Dummy Data --------- //
     private var phone = "01711010101"
@@ -23,38 +22,31 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        sendButton.setOnClickListener {
-            val userData = userDataObject(
+        networkActivity = NetworkActivity(this)
+        locationActivity = LocationActivity(this)
+
+        userDataButton.setOnClickListener {
+            val userData = networkActivity.userDataObject(
                 phone = phone,
                 gender = gender,
                 birthDate = birthDate
             )
-            postData(
+            networkActivity.postData(
                 url = userUrl,
                 data = userData
             )
         }
-    }
 
-    private fun postData(url: String, data: JSONObject) {
-        val queue = Volley.newRequestQueue(this)
-        val request = JsonObjectRequest(Request.Method.POST, url, data,
-            Response.Listener<JSONObject> { response ->
-                Log.d("corona", response.toString())
-            },
-            Response.ErrorListener {error ->
-                Log.d("corona", error.toString())
-            }
-        )
-        queue.add(request)
-    }
-
-    private fun userDataObject(phone: String, gender: String, birthDate: String): JSONObject {
-        val dataObject = JSONObject()
-        dataObject.put("phone", phone)
-        dataObject.put("gender", gender)
-        dataObject.put("birthDate", birthDate)
-        Log.d("corona", dataObject.toString())
-        return dataObject
+        locationDataButton.setOnClickListener {
+            val locationData = networkActivity.locationDataObject(
+                latitude = locationActivity.latitude,
+                longitude = locationActivity.longitude,
+                timeStamp = locationActivity.getTimeStamp()
+            )
+            networkActivity.postData(
+                url = locationUrl,
+                data = locationData
+            )
+        }
     }
 }
