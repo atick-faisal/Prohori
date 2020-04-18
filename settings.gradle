@@ -1,0 +1,2 @@
+rootProject.name='Corona Go'
+include ':app'
