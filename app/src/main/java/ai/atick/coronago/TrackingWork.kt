@@ -9,12 +9,12 @@ import androidx.work.WorkerParameters
 class TrackingWork(private val context: Context, workerParameters: WorkerParameters): Worker(context, workerParameters)  {
 
     private val locationActivity: LocationActivity = LocationActivity(context)
-    private val channelId = "101010"
+    private val key: Key = Key()
 
     override fun doWork(): Result {
         locationActivity.updateLocation()
 
-        val builder = NotificationCompat.Builder(context, channelId)
+        val builder = NotificationCompat.Builder(context, key.locationChannelId)
             .setSmallIcon(R.drawable.location)
             .setContentTitle("Location Updated")
             .setContentText("Your location was recorded by the Prohori app")

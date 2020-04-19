@@ -12,14 +12,14 @@ class UploadWork(private val context: Context, workerParameters: WorkerParameter
 
     private val networkActivity: NetworkActivity = NetworkActivity(context)
     private val database: AppDatabase = AppDatabase(context)
-    private var locationUrl: String = "https://covid-callfornation.herokuapp.com/location"
-    private val channelId = "101010"
+    private val key: Key = Key()
 
     override fun doWork(): Result {
         val phoneNumber = database.getString("phoneNumber")
         val latitudeList = database.getListString("latitudeList")
         val longitudeList = database.getListString("longitudeList")
         val timestampList = database.getListString("timestampList")
+        val registered = database.getBoolean("registered")
 
         val locationArray = JSONArray()
         timestampList.forEachIndexed { index, timestamp ->
@@ -37,9 +37,9 @@ class UploadWork(private val context: Context, workerParameters: WorkerParameter
 
         Log.d("corona", "My Data: $locationDataObject")
 
-        networkActivity.postData(locationUrl, locationDataObject)
+        if (registered) networkActivity.postDataBackground(key.locationUrl, locationDataObject)
 
-        val builder = NotificationCompat.Builder(context, channelId)
+        val builder = NotificationCompat.Builder(context, key.uploadChannelId)
             .setSmallIcon(R.drawable.location)
             .setContentTitle("Location Uploaded")
             .setContentText("${timestampList.size} Locations Uploaded")

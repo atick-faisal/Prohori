@@ -1,6 +1,7 @@
 package ai.atick.coronago
 
 import android.Manifest
+import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -12,9 +13,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.work.*
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
@@ -23,14 +22,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var locationActivity: LocationActivity
     private lateinit var testActivity: TestActivity
     private lateinit var database: AppDatabase
+    private lateinit var workActivity: WorkActivity
     private val key: Key = Key()
 
-    private val uploadTaskId = "Location Upload"
-    private val locationUpdateInterval: Long = 15
-    private val uploadInterval: Long = 30
-    private var userUrl = "https://covid-callfornation.herokuapp.com/user"
     private var registered = false
-    // network security config was required for http request //
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,6 +35,7 @@ class MainActivity : AppCompatActivity() {
         networkActivity = NetworkActivity(this)
         locationActivity = LocationActivity(this)
         testActivity = TestActivity(this)
+        workActivity = WorkActivity(this)
         database = AppDatabase(this)
 
         supportActionBar?.hide()
@@ -49,13 +45,11 @@ class MainActivity : AppCompatActivity() {
             registrationForm.visibility = View.GONE
             dashboard.visibility = View.VISIBLE
             userName.text = database.getString("name").substring(0, 1)
-            networkActivity.getData(userUrl + "/${database.getString("phoneNumber")}")
+            networkActivity.getData(key.userUrl + "/${database.getString("phoneNumber")}")
         } else {
             registrationForm.visibility = View.VISIBLE
             dashboard.visibility = View.GONE
         }
-
-        requestPermissions()
 
         registerButton.setOnClickListener {
             key.name = nameText.text.toString()
@@ -70,47 +64,21 @@ class MainActivity : AppCompatActivity() {
                 gender = key.gender,
                 birthDate = key.birthDate
             )
-            networkActivity.postData(userUrl, userData)
+            networkActivity.createUser(key.userUrl, userData)
             Log.d("corona", "New: ${key.birthDate}")
         }
 
-        createPeriodicTasks()
-        createNotificationChannel()
+        requestPermissions()
+        createNotificationChannel(key.locationChannelId, "Location Channel")
+        createNotificationChannel(key.uploadChannelId, "Upload Channel")
+        workActivity.createPeriodicTasks()
     }
 
-    private fun createPeriodicTasks() {
-        val trackingWork = PeriodicWorkRequestBuilder<TrackingWork>(
-            locationUpdateInterval, TimeUnit.MINUTES
-        ).build()
-
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            uploadTaskId,
-            ExistingPeriodicWorkPolicy.KEEP,
-            trackingWork
-        )
-
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .setRequiresCharging(true)
-            .build()
-
-        val uploadWork = PeriodicWorkRequestBuilder<UploadWork>(uploadInterval, TimeUnit.MINUTES)
-            .setConstraints(constraints)
-            .build()
-
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            uploadTaskId,
-            ExistingPeriodicWorkPolicy.KEEP,
-            uploadWork
-        )
-    }
-
-    private fun createNotificationChannel() {
+    private fun createNotificationChannel(id: String, channelName: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = getString(R.string.channel_name)
             val descriptionText = getString(R.string.channel_description)
             val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(key.channelId, name, importance).apply {
+            val channel = NotificationChannel(id, channelName, importance).apply {
                 description = descriptionText
             }
             val notificationManager: NotificationManager =

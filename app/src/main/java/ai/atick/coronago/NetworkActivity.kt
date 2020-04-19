@@ -18,6 +18,7 @@ import org.json.JSONObject
 class NetworkActivity(private val context: Context) {
 
     private val database: AppDatabase = AppDatabase(context)
+    private val key: Key = Key()
 
     fun userDataObject(
         phoneNumber: String,
@@ -67,7 +68,6 @@ class NetworkActivity(private val context: Context) {
                     val mainActivity = context as Activity
                     mainActivity.riskText.text = riskFactor.toString()
                 } catch (e: JSONException) {
-
                 }
                 Log.d("corona", response.toString())
             },
@@ -78,32 +78,47 @@ class NetworkActivity(private val context: Context) {
         queue.add(request)
     }
 
-    fun postData(url: String, data: JSONObject) {
+    fun postDataBackground(url: String, data: JSONObject) {
         val queue = Volley.newRequestQueue(context)
         val request = JsonObjectRequest(
             Request.Method.POST, url, data,
             Response.Listener<JSONObject> { response ->
+                cleanDatabase()
+                Log.d("corona", response.toString())
+            },
+            Response.ErrorListener { error ->
+                Log.d("corona", error.toString())
+            }
+        )
+        queue.add(request)
+    }
+
+    fun createUser(url: String, data: JSONObject) {
+        val queue = Volley.newRequestQueue(context)
+        val request = JsonObjectRequest(
+            Request.Method.POST, url, data,
+            Response.Listener<JSONObject> { response ->
+                database.putBoolean("registered", true)
+                val mainActivity = context as Activity
+                mainActivity.registrationForm.visibility = View.GONE
+                mainActivity.dashboard.visibility = View.VISIBLE
                 try {
                     val registered = response.getBoolean("success")
-                    database.putBoolean("registered", registered)
                     if (registered) {
-                        val mainActivity = context as Activity
-                        mainActivity.registrationForm.visibility = View.GONE
-                        mainActivity.dashboard.visibility = View.VISIBLE
                         Toast.makeText(
                             context,
                             "Registration Complete",
                             Toast.LENGTH_LONG
                         ).show()
                     } else {
+                        getData(key.userUrl + "/${database.getString("phoneNumber")}")
                         Toast.makeText(
                             context,
-                            "User Already Exists",
+                            "Already Registered",
                             Toast.LENGTH_LONG
                         ).show()
                     }
                 } catch (e: JSONException) {
-
                 }
                 cleanDatabase()
                 Log.d("corona", response.toString())
@@ -114,6 +129,8 @@ class NetworkActivity(private val context: Context) {
         )
         queue.add(request)
     }
+
+
 
     private fun cleanDatabase() {
         database.remove("latitudeList")

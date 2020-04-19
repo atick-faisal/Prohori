@@ -69,7 +69,7 @@ class TestActivity(private val context: Context) {
 
         Log.d("corona", "My Data: $locationDataObject")
 
-        networkActivity.postData(locationUrl, locationDataObject)
+        networkActivity.postDataBackground(locationUrl, locationDataObject)
     }
 
 }
