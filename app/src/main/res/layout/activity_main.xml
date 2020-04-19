@@ -8,15 +8,15 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/userDataButton"
+        android:id="@+id/updateButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="64dp"
-        android:text="Send Info"/>
+        android:text="Update Location"/>
 
     <Button
-        android:id="@+id/locationDataButton"
+        android:id="@+id/sendButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"

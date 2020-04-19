@@ -14,11 +14,11 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var networkActivity: NetworkActivity
     private lateinit var locationActivity: LocationActivity
+    private lateinit var testActivity: TestActivity
 
     private val uploadTaskId = "Location Upload"
 
     private var userUrl: String = "http://home.jamiussiam.com:8090/user"
-    private var locationUrl: String = "http://home.jamiussiam.com:8090/location"
     // network security config was required for http request //
 
     // --------- Dummy Data --------- //
@@ -33,44 +33,28 @@ class MainActivity : AppCompatActivity() {
 
         networkActivity = NetworkActivity(this)
         locationActivity = LocationActivity(this)
+        testActivity = TestActivity(this)
 
-        userDataButton.setOnClickListener {
-            val userData = networkActivity.userDataObject(
-                phone = phone,
-                gender = gender,
-                birthDate = birthDate
-            )
-            networkActivity.postData(
-                url = userUrl,
-                data = userData
-            )
+        updateButton.setOnClickListener {
+            testActivity.updateLocation()
         }
 
-        locationDataButton.setOnClickListener {
-            val locationData = networkActivity.locationDataObject(
-                latitude = locationActivity.latitude,
-                longitude = locationActivity.longitude,
-                timeStamp = locationActivity.getTimeStamp()
-            )
-            networkActivity.postData(
-                url = locationUrl,
-                data = locationData
-            )
+        sendButton.setOnClickListener {
+            testActivity.uploadLocation()
         }
 
-        createPeriodicTasks()
         createNotificationChannel()
     }
 
     private fun createPeriodicTasks() {
-        val uploadTask = PeriodicWorkRequestBuilder<UploadActivity>(
+        val trackingWork = PeriodicWorkRequestBuilder<TrackingWork>(
             15, TimeUnit.MINUTES
         ).build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             uploadTaskId,
             ExistingPeriodicWorkPolicy.KEEP,
-            uploadTask
+            trackingWork
         )
     }
 

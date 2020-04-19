@@ -4,8 +4,10 @@ import android.content.Context
 import android.util.Log
 import com.android.volley.Request
 import com.android.volley.Response
+import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -42,7 +44,7 @@ class NetworkActivity(private val context: Context) {
         return dataObject
     }
 
-    fun postData(url: String, data: JSONObject) {
+    fun postUserData(url: String, data: JSONObject) {
         val queue = Volley.newRequestQueue(context)
         val request = JsonObjectRequest(
             Request.Method.POST, url, data,
@@ -53,6 +55,20 @@ class NetworkActivity(private val context: Context) {
                 } catch (e: JSONException) {
                     Log.d("corona", e.toString())
                 }
+                Log.d("corona", response.toString())
+            },
+            Response.ErrorListener { error ->
+                Log.d("corona", error.toString())
+            }
+        )
+        queue.add(request)
+    }
+
+    fun postLocationData(url: String, data: JSONArray) {
+        val queue = Volley.newRequestQueue(context)
+        val request = JsonArrayRequest(
+            Request.Method.POST, url, data,
+            Response.Listener<JSONArray> { response ->
                 Log.d("corona", response.toString())
             },
             Response.ErrorListener { error ->
