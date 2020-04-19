@@ -1,12 +1,18 @@
 package ai.atick.coronago
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
+import android.view.View
+import android.widget.Toast
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 
 class NetworkActivity(private val context: Context) {
@@ -48,11 +54,57 @@ class NetworkActivity(private val context: Context) {
         return locationDataObject
     }
 
+    fun getData(url: String) {
+        val queue = Volley.newRequestQueue(context)
+        val request = StringRequest(
+            Request.Method.GET, url,
+            Response.Listener<String> { response ->
+                try {
+                    val dataObject = JSONObject(response)
+                    val userArray = dataObject.getJSONArray("user")
+                    val userData = userArray.getJSONObject(0)
+                    val riskFactor = userData.getDouble("riskFactor")
+                    val mainActivity = context as Activity
+                    mainActivity.riskText.text = riskFactor.toString()
+                } catch (e: JSONException) {
+
+                }
+                Log.d("corona", response.toString())
+            },
+            Response.ErrorListener { error ->
+                Log.d("corona", error.toString())
+            }
+        )
+        queue.add(request)
+    }
+
     fun postData(url: String, data: JSONObject) {
         val queue = Volley.newRequestQueue(context)
         val request = JsonObjectRequest(
             Request.Method.POST, url, data,
             Response.Listener<JSONObject> { response ->
+                try {
+                    val registered = response.getBoolean("success")
+                    database.putBoolean("registered", registered)
+                    if (registered) {
+                        val mainActivity = context as Activity
+                        mainActivity.registrationForm.visibility = View.GONE
+                        mainActivity.dashboard.visibility = View.VISIBLE
+                        Toast.makeText(
+                            context,
+                            "Registration Complete",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "User Already Exists",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                } catch (e: JSONException) {
+
+                }
                 cleanDatabase()
                 Log.d("corona", response.toString())
             },

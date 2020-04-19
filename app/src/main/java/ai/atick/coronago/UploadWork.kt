@@ -40,13 +40,13 @@ class UploadWork(private val context: Context, workerParameters: WorkerParameter
         networkActivity.postData(locationUrl, locationDataObject)
 
         val builder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.location)
             .setContentTitle("Location Uploaded")
             .setContentText("${timestampList.size} Locations Uploaded")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
         with(NotificationManagerCompat.from(context)) {
-            notify(1, builder.build())
+            notify(0, builder.build())
         }
         return Result.success()
     }

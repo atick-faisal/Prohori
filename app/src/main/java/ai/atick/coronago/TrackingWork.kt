@@ -15,9 +15,9 @@ class TrackingWork(private val context: Context, workerParameters: WorkerParamet
         locationActivity.updateLocation()
 
         val builder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.location)
             .setContentTitle("Location Updated")
-            .setContentText("")
+            .setContentText("Your location was recorded by the Prohori app")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
         with(NotificationManagerCompat.from(context)) {
