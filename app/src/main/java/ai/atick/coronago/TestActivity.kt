@@ -7,22 +7,22 @@ import com.google.android.gms.location.LocationServices
 import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 class TestActivity(private val context: Context) {
 
     private val database: AppDatabase = AppDatabase(context)
     private val networkActivity: NetworkActivity = NetworkActivity(context)
-
-    val latitudeList: ArrayList<String> = ArrayList()
-    val longitudeList: ArrayList<String> = ArrayList()
-    val timestampList: ArrayList<String> = ArrayList()
+    private var locationUrl: String = "https://covid-callfornation.herokuapp.com/location"
 
     fun updateLocation() {
         LocationServices
             .getFusedLocationProviderClient(context)
             .lastLocation
             .addOnSuccessListener { location ->
+                val latitudeList = database.getListString("latitudeList")
+                val longitudeList = database.getListString("longitudeList")
+                val timestampList = database.getListString("timestampList")
+
                 latitudeList.add(location.latitude.toString())
                 longitudeList.add(location.longitude.toString())
                 timestampList.add(getTimeStamp())
@@ -46,24 +46,30 @@ class TestActivity(private val context: Context) {
     }
 
     fun uploadLocation() {
-        val latitudeList = database.getListString("latitudeList").toMutableList()
-        val longitudeList = database.getListString("longitudeList").toMutableList()
-        val timestampList = database.getListString("timestampList").toMutableList()
+        val phoneNumber = database.getString("phoneNumber")
+        val latitudeList = database.getListString("latitudeList")
+        val longitudeList = database.getListString("longitudeList")
+        val timestampList = database.getListString("timestampList")
 
         Log.d("corona", timestampList.size.toString())
 
-        val dataArray = JSONArray()
-
+        val locationArray = JSONArray()
         timestampList.forEachIndexed { index, timestamp ->
-            val jsonObject = networkActivity.locationDataObject(
+            val locationObject = networkActivity.locationObject(
                 latitude = latitudeList[index],
                 longitude = longitudeList[index],
                 timeStamp = timestamp
             )
-            dataArray.put(jsonObject)
+            locationArray.put(locationObject)
         }
+        val locationDataObject = networkActivity.locationDataObject(
+            phoneNumber = phoneNumber,
+            locationArray = locationArray
+        )
 
-        Log.d("corona", "My Data: $dataArray")
+        Log.d("corona", "My Data: $locationDataObject")
+
+        networkActivity.postData(locationUrl, locationDataObject)
     }
 
 }

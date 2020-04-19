@@ -4,57 +4,56 @@ import android.content.Context
 import android.util.Log
 import com.android.volley.Request
 import com.android.volley.Response
-import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 
 class NetworkActivity(private val context: Context) {
 
     private val database: AppDatabase = AppDatabase(context)
-    private lateinit var userId: String
 
     fun userDataObject(
-        phone: String,
+        phoneNumber: String,
         gender: String,
         birthDate: String
     ): JSONObject {
         val dataObject = JSONObject()
-        dataObject.put("phone", phone)
+        dataObject.put("phoneNumber", phoneNumber)
         dataObject.put("gender", gender)
         dataObject.put("birthDate", birthDate)
         Log.d("corona", dataObject.toString())
         return dataObject
     }
 
-    fun locationDataObject(
+    fun locationObject(
         latitude: String,
         longitude: String,
         timeStamp: String
     ): JSONObject {
         val dataObject = JSONObject()
-        userId = database.getString("userId")
-        dataObject.put("userId", userId)
         dataObject.put("latitude", latitude)
         dataObject.put("longitude", longitude)
         dataObject.put("timeStamp", timeStamp)
-        Log.d("corona", dataObject.toString())
         return dataObject
     }
 
-    fun postUserData(url: String, data: JSONObject) {
+    fun locationDataObject(
+        phoneNumber: String,
+        locationArray: JSONArray
+    ): JSONObject {
+        val locationDataObject = JSONObject()
+        locationDataObject.put("phoneNumber", phoneNumber)
+        locationDataObject.put("locationData", locationArray)
+        return locationDataObject
+    }
+
+    fun postData(url: String, data: JSONObject) {
         val queue = Volley.newRequestQueue(context)
         val request = JsonObjectRequest(
             Request.Method.POST, url, data,
             Response.Listener<JSONObject> { response ->
-                try {
-                    val userId = response.getInt("id").toString()
-                    database.putString("userId", userId)
-                } catch (e: JSONException) {
-                    Log.d("corona", e.toString())
-                }
+                cleanDatabase()
                 Log.d("corona", response.toString())
             },
             Response.ErrorListener { error ->
@@ -64,17 +63,9 @@ class NetworkActivity(private val context: Context) {
         queue.add(request)
     }
 
-    fun postLocationData(url: String, data: JSONArray) {
-        val queue = Volley.newRequestQueue(context)
-        val request = JsonArrayRequest(
-            Request.Method.POST, url, data,
-            Response.Listener<JSONArray> { response ->
-                Log.d("corona", response.toString())
-            },
-            Response.ErrorListener { error ->
-                Log.d("corona", error.toString())
-            }
-        )
-        queue.add(request)
+    private fun cleanDatabase() {
+        database.remove("latitudeList")
+        database.remove("longitudeList")
+        database.remove("timestampList")
     }
 }

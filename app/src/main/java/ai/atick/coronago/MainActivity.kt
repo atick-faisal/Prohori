@@ -15,14 +15,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var networkActivity: NetworkActivity
     private lateinit var locationActivity: LocationActivity
     private lateinit var testActivity: TestActivity
+    private lateinit var database: AppDatabase
 
     private val uploadTaskId = "Location Upload"
-
-    private var userUrl: String = "http://home.jamiussiam.com:8090/user"
+    private val locationUpdateInterval: Long = 15
+    private val uploadInterval: Long = 30
+    private var userUrl: String = "https://covid-callfornation.herokuapp.com/user"
     // network security config was required for http request //
 
     // --------- Dummy Data --------- //
-    private var phone = "01711010101"
+    private var phoneNumber = "01711010101"
     private var gender = "OTHER"
     private var birthDate = "01-01-1969"
     private val channelId = "101010"
@@ -34,27 +36,38 @@ class MainActivity : AppCompatActivity() {
         networkActivity = NetworkActivity(this)
         locationActivity = LocationActivity(this)
         testActivity = TestActivity(this)
+        database = AppDatabase(this)
 
-        updateButton.setOnClickListener {
-            testActivity.updateLocation()
-        }
 
-        sendButton.setOnClickListener {
-            testActivity.uploadLocation()
-        }
 
+        createPeriodicTasks()
         createNotificationChannel()
     }
 
     private fun createPeriodicTasks() {
         val trackingWork = PeriodicWorkRequestBuilder<TrackingWork>(
-            15, TimeUnit.MINUTES
+            locationUpdateInterval, TimeUnit.MINUTES
         ).build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             uploadTaskId,
             ExistingPeriodicWorkPolicy.KEEP,
             trackingWork
+        )
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .setRequiresCharging(true)
+            .build()
+
+        val uploadWork = PeriodicWorkRequestBuilder<UploadWork>(uploadInterval, TimeUnit.MINUTES)
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            uploadTaskId,
+            ExistingPeriodicWorkPolicy.KEEP,
+            uploadWork
         )
     }
 

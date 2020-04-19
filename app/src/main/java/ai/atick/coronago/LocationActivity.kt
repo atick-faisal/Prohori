@@ -1,25 +1,23 @@
 package ai.atick.coronago
 
 import android.content.Context
-import android.widget.Toast
 import com.google.android.gms.location.LocationServices
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 class LocationActivity(private val context: Context) {
 
-    val database: AppDatabase = AppDatabase(context)
-
-    val latitudeList: ArrayList<String> = ArrayList()
-    val longitudeList: ArrayList<String> = ArrayList()
-    val timestampList: ArrayList<String> = ArrayList()
+    private val database: AppDatabase = AppDatabase(context)
 
     fun updateLocation() {
         LocationServices
             .getFusedLocationProviderClient(context)
             .lastLocation
             .addOnSuccessListener { location ->
+                val latitudeList = database.getListString("latitudeList")
+                val longitudeList = database.getListString("longitudeList")
+                val timestampList = database.getListString("timestampList")
+
                 latitudeList.add(location.latitude.toString())
                 longitudeList.add(location.longitude.toString())
                 timestampList.add(getTimeStamp())
