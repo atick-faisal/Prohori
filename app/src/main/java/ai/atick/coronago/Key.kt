@@ -13,4 +13,5 @@ class Key {
     val uploadInterval: Long = 30
     val userUrl = "https://covid-callfornation.herokuapp.com/user"
     val locationUrl= "https://covid-callfornation.herokuapp.com/location"
+    val mapKey = "MapViewBundleKey"
 }

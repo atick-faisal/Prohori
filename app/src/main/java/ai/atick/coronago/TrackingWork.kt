@@ -13,7 +13,7 @@ class TrackingWork(private val context: Context, workerParameters: WorkerParamet
 
     override fun doWork(): Result {
         locationActivity.updateLocation()
-
+        ////////////////////////////////////////////////////////////////////////////
         val builder = NotificationCompat.Builder(context, key.locationChannelId)
             .setSmallIcon(R.drawable.location)
             .setContentTitle("Location Updated")
@@ -23,7 +23,7 @@ class TrackingWork(private val context: Context, workerParameters: WorkerParamet
         with(NotificationManagerCompat.from(context)) {
             notify(0, builder.build())
         }
-
+        /////////////////////////////////////////
         return Result.success()
     }
 }

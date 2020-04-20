@@ -13,14 +13,14 @@ class UploadWork(private val context: Context, workerParameters: WorkerParameter
     private val networkActivity: NetworkActivity = NetworkActivity(context)
     private val database: AppDatabase = AppDatabase(context)
     private val key: Key = Key()
-
+    /////////////////////////////////////////////////////////////////
     override fun doWork(): Result {
         val phoneNumber = database.getString("phoneNumber")
         val latitudeList = database.getListString("latitudeList")
         val longitudeList = database.getListString("longitudeList")
         val timestampList = database.getListString("timestampList")
         val registered = database.getBoolean("registered")
-
+        //////////////////////////////////////////////////////////////////////
         val locationArray = JSONArray()
         timestampList.forEachIndexed { index, timestamp ->
             val locationObject = networkActivity.locationObject(
@@ -34,20 +34,20 @@ class UploadWork(private val context: Context, workerParameters: WorkerParameter
             phoneNumber = phoneNumber,
             locationArray = locationArray
         )
-
         Log.d("corona", "My Data: $locationDataObject")
-
+        /////////////////////////////////////////////////////////////////////////////////////////
         if (registered) networkActivity.postDataBackground(key.locationUrl, locationDataObject)
-
+        /////////////////////////////////////////////////////////////////////////////////////////
         val builder = NotificationCompat.Builder(context, key.uploadChannelId)
             .setSmallIcon(R.drawable.location)
             .setContentTitle("Location Uploaded")
-            .setContentText("${timestampList.size} Locations Uploaded")
+            .setContentText("${timestampList.size} Location(s) Uploaded")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
         with(NotificationManagerCompat.from(context)) {
             notify(0, builder.build())
         }
+        ////////////////////////////////////////
         return Result.success()
     }
 }

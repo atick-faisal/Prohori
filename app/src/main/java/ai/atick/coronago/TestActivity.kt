@@ -8,6 +8,10 @@ import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.*
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// ---------------------- This Activity is for testing purposes ----------------------------------//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class TestActivity(private val context: Context) {
 
     private val database: AppDatabase = AppDatabase(context)

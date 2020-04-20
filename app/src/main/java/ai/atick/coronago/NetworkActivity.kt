@@ -19,7 +19,7 @@ class NetworkActivity(private val context: Context) {
 
     private val database: AppDatabase = AppDatabase(context)
     private val key: Key = Key()
-
+    /////////////////////////////////////////////////////////
     fun userDataObject(
         phoneNumber: String,
         gender: String,
@@ -32,7 +32,7 @@ class NetworkActivity(private val context: Context) {
         Log.d("corona", dataObject.toString())
         return dataObject
     }
-
+    /////////////////////////////////////////////////////////
     fun locationObject(
         latitude: String,
         longitude: String,
@@ -44,7 +44,7 @@ class NetworkActivity(private val context: Context) {
         dataObject.put("timeStamp", timeStamp)
         return dataObject
     }
-
+    /////////////////////////////////////////////////////////
     fun locationDataObject(
         phoneNumber: String,
         locationArray: JSONArray
@@ -54,7 +54,7 @@ class NetworkActivity(private val context: Context) {
         locationDataObject.put("locationData", locationArray)
         return locationDataObject
     }
-
+    //////////////////////////////////////////////////////////////////
     fun getData(url: String) {
         val queue = Volley.newRequestQueue(context)
         val request = StringRequest(
@@ -77,7 +77,7 @@ class NetworkActivity(private val context: Context) {
         )
         queue.add(request)
     }
-
+    //////////////////////////////////////////////////////////////////
     fun postDataBackground(url: String, data: JSONObject) {
         val queue = Volley.newRequestQueue(context)
         val request = JsonObjectRequest(
@@ -92,7 +92,7 @@ class NetworkActivity(private val context: Context) {
         )
         queue.add(request)
     }
-
+    //////////////////////////////////////////////////////////
     fun createUser(url: String, data: JSONObject) {
         val queue = Volley.newRequestQueue(context)
         val request = JsonObjectRequest(
@@ -102,6 +102,7 @@ class NetworkActivity(private val context: Context) {
                 val mainActivity = context as Activity
                 mainActivity.registrationForm.visibility = View.GONE
                 mainActivity.dashboard.visibility = View.VISIBLE
+                getData(key.userUrl + "/${database.getString("phoneNumber")}")
                 try {
                     val registered = response.getBoolean("success")
                     if (registered) {
@@ -111,7 +112,6 @@ class NetworkActivity(private val context: Context) {
                             Toast.LENGTH_LONG
                         ).show()
                     } else {
-                        getData(key.userUrl + "/${database.getString("phoneNumber")}")
                         Toast.makeText(
                             context,
                             "Already Registered",
@@ -129,9 +129,7 @@ class NetworkActivity(private val context: Context) {
         )
         queue.add(request)
     }
-
-
-
+    ///////////////////////////////////////////////////////////
     private fun cleanDatabase() {
         database.remove("latitudeList")
         database.remove("longitudeList")
