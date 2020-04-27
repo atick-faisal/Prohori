@@ -94,6 +94,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////////
     private fun createNewUser(data: JSONObject) {
         val queue = Volley.newRequestQueue(this)
         val request = JsonObjectRequest(
@@ -103,7 +104,6 @@ class MainActivity : AppCompatActivity() {
                 try {
                     val registered = response.getBoolean("success")
                     if (registered) Toast.makeText(this, "Registration Complete", Toast.LENGTH_LONG).show()
-                    else Toast.makeText(this, "Already Registered", Toast.LENGTH_LONG).show()
                 } catch (e: JSONException) {
                 }
                 Log.d("corona", response.toString())

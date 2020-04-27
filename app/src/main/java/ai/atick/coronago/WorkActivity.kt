@@ -10,9 +10,16 @@ class WorkActivity(val context: Context) {
     private val key: Key = Key()
     ///////////////////////////////////////////////////////////////
     fun createPeriodicTasks() {
-        val trackingWork = PeriodicWorkRequestBuilder<TrackingWork>(
-            key.locationUpdateInterval, TimeUnit.MINUTES
-        ).build()
+        val trackingConstraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+            .setRequiresCharging(false)
+            .setRequiresDeviceIdle(false)
+            .setRequiresBatteryNotLow(false)
+            .build()
+        //////////////////////////////////////////////////////////////
+        val trackingWork = PeriodicWorkRequestBuilder<TrackingWork>(key.locationUpdateInterval, TimeUnit.MINUTES)
+            .setConstraints(trackingConstraints)
+            .build()
         //////////////////////////////////////////////////////////////
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             key.locationTaskId,
@@ -20,7 +27,7 @@ class WorkActivity(val context: Context) {
             trackingWork
         )
         /////////////////////////////////////////////////
-        val constraints = Constraints.Builder()
+        val uploadConstraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .setRequiresCharging(false)
             .setRequiresDeviceIdle(false)
@@ -28,7 +35,7 @@ class WorkActivity(val context: Context) {
             .build()
         //////////////////////////////////////////////////////////////////////////
         val uploadWork = PeriodicWorkRequestBuilder<UploadWork>(key.uploadInterval, TimeUnit.MINUTES)
-            .setConstraints(constraints)
+            .setConstraints(uploadConstraints)
             .build()
         //////////////////////////////////////////////////////////////////
         Handler().postDelayed({
