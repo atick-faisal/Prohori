@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
         //////////////////////////////////////////////////
         networkActivity = NetworkActivity(this)
         database = AppDatabase(this)
+        //////////////////////////////////////////////////
         registered = database.getBoolean("registered")
 //        if (registered) {
 //            startActivity(Intent(this, HomeActivity::class.java))
@@ -43,6 +44,7 @@ class MainActivity : AppCompatActivity() {
 //        }
 //        else setContentView(R.layout.activity_main)
         setContentView(R.layout.activity_main)
+        ////////////////////////////////////////////////////////////
         nameText.setText(database.getString("name"))
         phoneText.setText(database.getString("phoneNumber"))
         birthdayText.setText(database.getString("birthDate"))
@@ -55,6 +57,8 @@ class MainActivity : AppCompatActivity() {
 
     fun registerUser(@Suppress("UNUSED_PARAMETER") v: View) {
         if (!isAnyFieldEmpty()) {
+            progressBar.visibility = View.VISIBLE
+            formLayout.alpha = 0.3f
             saveUserData()
             val userData = networkActivity.userDataObject(
                 phoneNumber = database.getString("phoneNumber"),
@@ -107,6 +111,8 @@ class MainActivity : AppCompatActivity() {
                 } catch (e: JSONException) {
                 }
                 Log.d("corona", response.toString())
+                progressBar.visibility = View.GONE
+                formLayout.alpha = 1.0f
                 startActivity(Intent(this, HomeActivity::class.java))
             },
             Response.ErrorListener { error ->
