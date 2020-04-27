@@ -83,7 +83,7 @@ class NetworkActivity(private val context: Context) {
         val request = JsonObjectRequest(
             Request.Method.POST, url, data,
             Response.Listener<JSONObject> { response ->
-                cleanDatabase()
+                //cleanDatabase()
                 Log.d("corona", response.toString())
             },
             Response.ErrorListener { error ->

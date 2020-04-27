@@ -140,10 +140,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         0
                     )
                 }
-                checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED -> {
+                checkSelfPermission(Manifest.permission.RECEIVE_BOOT_COMPLETED) != PackageManager.PERMISSION_GRANTED -> {
                     ActivityCompat.requestPermissions(
                         this@MainActivity,
-                        arrayOf(Manifest.permission.INTERNET),
+                        arrayOf(Manifest.permission.RECEIVE_BOOT_COMPLETED),
                         0
                     )
                 }

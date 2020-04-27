@@ -15,13 +15,15 @@ class WorkActivity(val context: Context) {
         //////////////////////////////////////////////////////////////
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             key.locationTaskId,
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.REPLACE,
             trackingWork
         )
         /////////////////////////////////////////////////
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
-            .setRequiresCharging(true)
+            .setRequiresCharging(false)
+            .setRequiresDeviceIdle(false)
+            .setRequiresBatteryNotLow(false)
             .build()
         //////////////////////////////////////////////////////////////////////////
         val uploadWork = PeriodicWorkRequestBuilder<UploadWork>(key.uploadInterval, TimeUnit.MINUTES)
@@ -30,7 +32,7 @@ class WorkActivity(val context: Context) {
         //////////////////////////////////////////////////////////////////
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             key.uploadTaskId,
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.REPLACE,
             uploadWork
         )
     }

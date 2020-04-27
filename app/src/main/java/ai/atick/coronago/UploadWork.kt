@@ -42,7 +42,7 @@ class UploadWork(private val context: Context, workerParameters: WorkerParameter
             .setSmallIcon(R.drawable.location)
             .setContentTitle("Location Uploaded")
             .setContentText("${timestampList.size} Location(s) Uploaded")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
 
         with(NotificationManagerCompat.from(context)) {
             notify(0, builder.build())
