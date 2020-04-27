@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
     android:orientation="vertical"
     android:paddingLeft="40dp"
     android:paddingRight="40dp"
@@ -65,7 +66,8 @@
             android:id="@+id/datePicker"
             android:layout_width="34dp"
             android:layout_height="34dp"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:onClick="showDatePickerDialog"
             android:padding="4dp"
             android:src="@drawable/edit" />
@@ -86,10 +88,12 @@
 
     <Button
         android:id="@+id/registerButton"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/button"
         android:onClick="registerUser"
-        android:text="Register" />
+        android:text="Log in" />
 
 </LinearLayout>

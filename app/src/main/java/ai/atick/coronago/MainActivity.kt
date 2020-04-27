@@ -37,11 +37,16 @@ class MainActivity : AppCompatActivity() {
         networkActivity = NetworkActivity(this)
         database = AppDatabase(this)
         registered = database.getBoolean("registered")
-        if (registered) {
-            startActivity(Intent(this, HomeActivity::class.java))
-            finish()
-        }
-        else setContentView(R.layout.activity_main)
+//        if (registered) {
+//            startActivity(Intent(this, HomeActivity::class.java))
+//            finish()
+//        }
+//        else setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_main)
+        nameText.setText(database.getString("name"))
+        phoneText.setText(database.getString("phoneNumber"))
+        birthdayText.setText(database.getString("birthDate"))
+        genderSelector.onItemSelectedListener = SpinnerListener(this)
         ////////////////////////////////////////////////////////////////////////////
         askForPermissions()
         createNotificationChannel(key.locationChannelId, "Location Channel")
@@ -52,9 +57,9 @@ class MainActivity : AppCompatActivity() {
         if (!isAnyFieldEmpty()) {
             saveUserData()
             val userData = networkActivity.userDataObject(
-                phoneNumber = key.phoneNumber,
-                gender = key.gender,
-                birthDate = key.birthDate
+                phoneNumber = database.getString("phoneNumber"),
+                gender = database.getString("gender"),
+                birthDate = database.getString("birthDate")
             )
             createNewUser(userData)
         }
@@ -62,13 +67,9 @@ class MainActivity : AppCompatActivity() {
 
     ///////////////////////////////////////////////////////////////////////////////
     private fun saveUserData() {
-        key.name = nameText.text.toString()
-        key.birthDate = birthdayText.text.toString()
-        key.phoneNumber = phoneText.text.toString()
-        database.putString("name", key.name)
-        database.putString("gender", key.gender)
-        database.putString("phoneNumber", key.phoneNumber)
-        database.putString("birthDate", key.birthDate)
+        database.putString("name", nameText.text.toString())
+        database.putString("phoneNumber", phoneText.text.toString())
+        database.putString("birthDate", birthdayText.text.toString())
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +92,6 @@ class MainActivity : AppCompatActivity() {
                 return false
             }
         }
-        return false
     }
 
     private fun createNewUser(data: JSONObject) {

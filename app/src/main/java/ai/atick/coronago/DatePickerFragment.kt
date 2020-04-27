@@ -22,7 +22,7 @@ class DatePickerFragment : DialogFragment(), OnDateSetListener {
     }
     ///////////////////////////////////////////////////////////////////////////////////
     override fun onDateSet(view: DatePicker, year: Int, month: Int, day: Int) {
-        val date = "$day-$month-$year"
+        val date = "$day-${month+1}-$year"
         val mainActivity = this.requireContext() as Activity
         mainActivity.birthdayText.setText(date)
     }

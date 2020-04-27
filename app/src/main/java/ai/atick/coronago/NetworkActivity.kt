@@ -1,26 +1,18 @@
 package ai.atick.coronago
 
-import android.app.Activity
 import android.content.Context
 import android.util.Log
-import android.view.View
-import android.widget.Toast
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import kotlinx.android.synthetic.main.activity_home.*
-import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 
 class NetworkActivity(private val context: Context) {
 
     private val database: AppDatabase = AppDatabase(context)
-    private val key: Key = Key()
-    /////////////////////////////////////////////////////////
+
     fun userDataObject(
         phoneNumber: String,
         gender: String,
