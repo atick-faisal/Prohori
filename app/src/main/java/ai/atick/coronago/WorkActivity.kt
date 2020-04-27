@@ -1,6 +1,7 @@
 package ai.atick.coronago
 
 import android.content.Context
+import android.os.Handler
 import androidx.work.*
 import java.util.concurrent.TimeUnit
 
@@ -30,10 +31,12 @@ class WorkActivity(val context: Context) {
             .setConstraints(constraints)
             .build()
         //////////////////////////////////////////////////////////////////
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-            key.uploadTaskId,
-            ExistingPeriodicWorkPolicy.REPLACE,
-            uploadWork
-        )
+        Handler().postDelayed({
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                key.uploadTaskId,
+                ExistingPeriodicWorkPolicy.REPLACE,
+                uploadWork
+            )
+        }, 1000)
     }
 }

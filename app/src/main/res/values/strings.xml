@@ -2,6 +2,7 @@
     <string name="app_name">Prohori</string>
     <string name="channel_name">Corona Channel</string>
     <string name="channel_description">Daily Corona Notification</string>
+    <string name="field_required">This Field is Required</string>
 
     <string-array name="gender">
         <item>MALE</item>

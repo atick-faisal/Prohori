@@ -14,4 +14,5 @@ class Key {
     val userUrl = "https://covid-callfornation.herokuapp.com/user"
     val locationUrl= "https://covid-callfornation.herokuapp.com/location"
     val mapKey = "MapViewBundleKey"
+    val permissionKey = 1011
 }

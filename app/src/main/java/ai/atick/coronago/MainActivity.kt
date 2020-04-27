@@ -4,105 +4,118 @@ import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Geocoder
 import android.os.Build
 import android.os.Bundle
+import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.*
+import org.json.JSONException
+import org.json.JSONObject
 
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+class MainActivity : AppCompatActivity() {
 
-    //////////////////////////////////////////////////////////
     private lateinit var networkActivity: NetworkActivity
-    private lateinit var locationActivity: LocationActivity
-    private lateinit var testActivity: TestActivity
     private lateinit var database: AppDatabase
-    private lateinit var workActivity: WorkActivity
-    //////////////////////////////////////////////////////////
     private val key: Key = Key()
-    //////////////////////////////////////////////////////////
     private var registered = false
-    private var mapReady = false
-    private lateinit var map: GoogleMap
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        //////////////////////////////////////////////////
-        networkActivity = NetworkActivity(this)
-        locationActivity = LocationActivity(this)
-        testActivity = TestActivity(this)
-        workActivity = WorkActivity(this)
-        database = AppDatabase(this)
-        //////////////////////////////////////////////////
         supportActionBar?.hide()
         //////////////////////////////////////////////////
-        var mapViewBundle: Bundle? = null
-        if (savedInstanceState != null) {
-            mapViewBundle = savedInstanceState.getBundle(key.mapKey)
-        }
-        mapView.onCreate(mapViewBundle)
-        mapView.getMapAsync(this)
-        ///////////////////////////////////////////////////////////
+        networkActivity = NetworkActivity(this)
+        database = AppDatabase(this)
         registered = database.getBoolean("registered")
         if (registered) {
-            registrationForm.visibility = View.GONE
-            dashboard.visibility = View.VISIBLE
-            if (database.getString("name") != "") userName.text = database.getString("name").substring(0, 1)
-            networkActivity.getData(key.userUrl + "/${database.getString("phoneNumber")}")
-        } else {
-            registrationForm.visibility = View.VISIBLE
-            dashboard.visibility = View.GONE
+            startActivity(Intent(this, HomeActivity::class.java))
+            finish()
         }
-        /////////////////////////////////////////////////////////////////////////////
-        registerButton.setOnClickListener {
-            key.name = nameText.text.toString()
-            key.birthDate = birthdayText.text.toString()
-            key.phoneNumber = phoneText.text.toString()
-            database.putString("name", key.name)
-            database.putString("gender", key.gender)
-            database.putString("phoneNumber", key.phoneNumber)
-            database.putString("birthDate", key.birthDate)
+        else setContentView(R.layout.activity_main)
+        ////////////////////////////////////////////////////////////////////////////
+        askForPermissions()
+        createNotificationChannel(key.locationChannelId, "Location Channel")
+        createNotificationChannel(key.uploadChannelId, "Upload Channel")
+    }
+
+    fun registerUser(@Suppress("UNUSED_PARAMETER") v: View) {
+        if (!isAnyFieldEmpty()) {
+            saveUserData()
             val userData = networkActivity.userDataObject(
                 phoneNumber = key.phoneNumber,
                 gender = key.gender,
                 birthDate = key.birthDate
             )
-            networkActivity.createUser(key.userUrl, userData)
-            workActivity.createPeriodicTasks()
-            if (database.getString("name") != "") userName.text = database.getString("name").substring(0, 1)
-            Log.d("corona", "New: ${key.birthDate}")
+            createNewUser(userData)
         }
-        ////////////////////////////////////////////////////////////////////////////////////////////
-        requestPermissions()
-        createNotificationChannel(key.locationChannelId, "Location Channel")
-        createNotificationChannel(key.uploadChannelId, "Upload Channel")
     }
-    ///////////////////////////////////////////////////////////
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        var mapViewBundle = outState.getBundle(key.mapKey)
-        if (mapViewBundle == null) {
-            mapViewBundle = Bundle()
-            outState.putBundle(key.mapKey, mapViewBundle)
+
+    ///////////////////////////////////////////////////////////////////////////////
+    private fun saveUserData() {
+        key.name = nameText.text.toString()
+        key.birthDate = birthdayText.text.toString()
+        key.phoneNumber = phoneText.text.toString()
+        database.putString("name", key.name)
+        database.putString("gender", key.gender)
+        database.putString("phoneNumber", key.phoneNumber)
+        database.putString("birthDate", key.birthDate)
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    private fun isAnyFieldEmpty(): Boolean {
+        val warning = getString(R.string.field_required)
+        when {
+            TextUtils.isEmpty(nameText.text.toString()) -> {
+                nameText.error = warning
+                return true
+            }
+            TextUtils.isEmpty(phoneText.text.toString()) -> {
+                phoneText.error = warning
+                return true
+            }
+            TextUtils.isEmpty(birthdayText.text.toString()) -> {
+                birthdayText.error = warning
+                return true
+            }
+            else -> {
+                return false
+            }
         }
-        mapView.onSaveInstanceState(mapViewBundle)
+        return false
     }
+
+    private fun createNewUser(data: JSONObject) {
+        val queue = Volley.newRequestQueue(this)
+        val request = JsonObjectRequest(
+            Request.Method.POST, key.userUrl, data,
+            Response.Listener<JSONObject> { response ->
+                database.putBoolean("registered", true)
+                try {
+                    val registered = response.getBoolean("success")
+                    if (registered) Toast.makeText(this, "Registration Complete", Toast.LENGTH_LONG).show()
+                    else Toast.makeText(this, "Already Registered", Toast.LENGTH_LONG).show()
+                } catch (e: JSONException) {
+                }
+                Log.d("corona", response.toString())
+                startActivity(Intent(this, HomeActivity::class.java))
+            },
+            Response.ErrorListener { error ->
+                Log.d("corona", error.toString())
+            }
+        )
+        queue.add(request)
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     private fun createNotificationChannel(id: String, channelName: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -116,126 +129,45 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             notificationManager.createNotificationChannel(channel)
         }
     }
+
     ////////////////////////////////////////////////////////////////
     fun showDatePickerDialog(v: View) {
         Log.d("corona", "View: $v")
         val newFragment = DatePickerFragment()
         newFragment.show(supportFragmentManager, "datePicker")
     }
-    //////////////////////////////////////////////////////////////////////////////
-    private fun requestPermissions() {
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    private fun askForPermissions() {
+        val permissions = mutableListOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) permissions.add(
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        )
+        val permissionsToRequest = permissionsToRequest(permissions)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            when {
-                checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED -> {
-                    ActivityCompat.requestPermissions(
-                        this@MainActivity,
-                        arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
-                        0
-                    )
-                }
-                checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED -> {
-                    ActivityCompat.requestPermissions(
-                        this@MainActivity,
-                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                        0
-                    )
-                }
-                checkSelfPermission(Manifest.permission.RECEIVE_BOOT_COMPLETED) != PackageManager.PERMISSION_GRANTED -> {
-                    ActivityCompat.requestPermissions(
-                        this@MainActivity,
-                        arrayOf(Manifest.permission.RECEIVE_BOOT_COMPLETED),
-                        0
-                    )
-                }
-                checkSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED -> {
-                    ActivityCompat.requestPermissions(
-                        this@MainActivity,
-                        arrayOf(Manifest.permission.ACCESS_NETWORK_STATE),
-                        0
-                    )
-                }
+            if (permissionsToRequest.size > 0) {
+                Toast.makeText(this, "Please allow permissions...", Toast.LENGTH_LONG).show()
+                requestPermissions(permissionsToRequest.toTypedArray(), key.permissionKey)
             }
         }
     }
-    ////////////////////////////////////////////////////////////////////
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String?>,
-        grantResults: IntArray
-    ) {
-        if (requestCode == 0) {
-            if (grantResults.isNotEmpty()
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED
-            ) {
-                refreshMap()
-                //requestPermissions()
-            } else {
-                Toast.makeText(
-                    applicationContext,
-                    "Please allow permissions...",
-                    Toast.LENGTH_LONG
-                ).show()
-                requestPermissions()
-            }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    private fun permissionsToRequest(allPermissions: MutableList<String>): MutableList<String> {
+        val result = mutableListOf<String>()
+        for (permission in allPermissions) {
+            if (!hasPermission(permission)) result.add(permission)
         }
+        return result
     }
-    ///////////////////////////////////////
-    override fun onResume() {
-        super.onResume()
-        mapView.onResume()
-    }
-    ///////////////////////////////////////
-    override fun onStart() {
-        super.onStart()
-        mapView.onStart()
-    }
-    ///////////////////////////////////////
-    override fun onStop() {
-        super.onStop()
-        mapView.onStop()
-    }
-    ///////////////////////////////////////
-    override fun onPause() {
-        mapView.onPause()
-        super.onPause()
-    }
-    ///////////////////////////////////////
-    override fun onDestroy() {
-        mapView.onDestroy()
-        super.onDestroy()
-    }
-    ///////////////////////////////////////
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mapView.onLowMemory()
-    }
-    ///////////////////////////////////////
-    override fun onMapReady(googleMap: GoogleMap) {
-        mapReady = true
-        map = googleMap
-        refreshMap()
-    }
-    ///////////////////////////////////////////////////////////
-    private fun refreshMap() {
-        map.setMinZoomPreference(12F)
-        LocationServices
-            .getFusedLocationProviderClient(this)
-            .lastLocation
-            .addOnSuccessListener { location ->
-                val latitude = location.latitude
-                val longitude = location.longitude
-                val geo = Geocoder(this, Locale.US)
-                val addresses = geo.getFromLocation(latitude, longitude, 1)
-                val cityName = addresses[0].getAddressLine(0)
-                val currentLocation = LatLng(latitude, longitude)
-                map.moveCamera(CameraUpdateFactory.newLatLng(currentLocation))
-                map.addMarker(MarkerOptions()
-                    .position(currentLocation)
-                    .title(database.getString("name"))
-                    .icon(BitmapDescriptorFactory.defaultMarker())
-                    .draggable(false)
-                    .visible(true))
-                locationText.text = cityName
-            }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    private fun hasPermission(permission: String): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+        ) return checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+        return true
     }
 }
