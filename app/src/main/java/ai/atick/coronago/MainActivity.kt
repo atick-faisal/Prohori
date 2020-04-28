@@ -11,8 +11,10 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
@@ -114,6 +116,7 @@ class MainActivity : AppCompatActivity() {
                 progressBar.visibility = View.GONE
                 formLayout.alpha = 1.0f
                 startActivity(Intent(this, HomeActivity::class.java))
+                finish()
             },
             Response.ErrorListener { error ->
                 Log.d("corona", error.toString())
