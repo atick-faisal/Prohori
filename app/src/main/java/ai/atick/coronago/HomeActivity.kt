@@ -1,9 +1,12 @@
 package ai.atick.coronago
 
+import android.content.Context
 import android.content.Intent
 import android.location.Geocoder
 import android.location.Location
+import android.location.LocationManager
 import android.os.Bundle
+import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.Menu
@@ -15,10 +18,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.android.volley.Request
-import com.android.volley.Response
+import com.android.volley.*
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import com.daimajia.androidanimations.library.Techniques
+import com.daimajia.androidanimations.library.YoYo
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -87,12 +91,25 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
                     val userData = userArray.getJSONObject(0)
                     val riskFactor = userData.getDouble("riskFactor")
                     riskText.text = riskFactor.toString()
+                    YoYo.with(Techniques.Tada)
+                        .duration(700)
+                        .playOn(riskText)
                 } catch (e: JSONException) {
                 }
                 Log.d("corona", response.toString())
             },
             Response.ErrorListener { error ->
                 Log.d("corona", error.toString())
+                var message = "Something Went Wrong"
+                when (error) {
+                    is NetworkError -> message = "Please Turn on Internet"
+                    is ServerError -> message = "Server not Found"
+                    is AuthFailureError -> message = "Authentication Failed"
+                    is ParseError -> message = "Parsing Error"
+                    is NoConnectionError -> message = "No Connection"
+                    is TimeoutError -> message = "Request Timed Out"
+                }
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
             }
         )
         queue.add(request)
@@ -100,17 +117,37 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     ///////////////////////////////////////////////////////////
     fun requestLocationUpdate(@Suppress("UNUSED_PARAMETER") v: View) {
-        Toast.makeText(this, "Updating Location", Toast.LENGTH_SHORT).show()
-        val locationRequest = LocationRequest.create()?.apply {
-            interval = 10000
-            fastestInterval = 5000
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        val lm = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        var isLocationEnabled = false
+        try { isLocationEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER)}
+        catch (e: Exception) {}
+        if (isLocationEnabled) {
+            fabButton.visibility = View.GONE
+            YoYo.with(Techniques.RollOut).duration(500).playOn(fabButton)
+            updatingLocation.visibility = View.VISIBLE
+            YoYo.with(Techniques.BounceInUp).duration(700).playOn(updatingLocation)
+            ////////////////////////////////////////////////////////////////////////////////////
+            Handler().postDelayed({
+                updatingLocation.visibility = View.GONE
+                YoYo.with(Techniques.DropOut).duration(500).playOn(updatingLocation)
+                fabButton.visibility = View.VISIBLE
+                YoYo.with(Techniques.RollIn).duration(700).playOn(fabButton)
+            }, 4000)
+            ////////////////////////////////////////////////////////////////////////////////////
+            val locationRequest = LocationRequest.create()?.apply {
+                interval = 10000
+                fastestInterval = 5000
+                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            }
+            //////////////////////////////////////////////////////
+            fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                Looper.getMainLooper()
+            )
+        } else {
+            Toast.makeText(this, "Please Enable Location", Toast.LENGTH_LONG).show()
         }
-        fusedLocationClient.requestLocationUpdates(
-            locationRequest,
-            locationCallback,
-            Looper.getMainLooper()
-        )
     }
 
     ///////////////////////////////////////////////////////////
@@ -201,12 +238,14 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         locationText.text = cityName
     }
 
+    ////////////////////////////////////////////////////////////
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         val inflater: MenuInflater = menuInflater
         inflater.inflate(R.menu.home_menu, menu)
         return true
     }
 
+    //////////////////////////////////////////////////////////////////
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.logoutButton -> {

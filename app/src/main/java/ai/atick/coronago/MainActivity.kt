@@ -11,14 +11,13 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
 import android.view.View
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import com.android.volley.Request
-import com.android.volley.Response
+import com.android.volley.*
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import com.daimajia.androidanimations.library.Techniques
+import com.daimajia.androidanimations.library.YoYo
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONException
 import org.json.JSONObject
@@ -30,6 +29,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var database: AppDatabase
     private val key: Key = Key()
     private var registered = false
+    private var name: String? = null
+    private var phoneNumber: String? = null
+    private var birthDate: String? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,23 +40,33 @@ class MainActivity : AppCompatActivity() {
         //////////////////////////////////////////////////
         networkActivity = NetworkActivity(this)
         database = AppDatabase(this)
+        name = database.getString("name")
+        phoneNumber = database.getString("phoneNumber")
+        birthDate = database.getString("birthDate")
         //////////////////////////////////////////////////
         registered = database.getBoolean("registered")
+        //registered = false
         if (registered) {
             startActivity(Intent(this, HomeActivity::class.java))
             finish()
+        } else {
+            setContentView(R.layout.activity_main)
+            if (name != null) nameText.setText(name)
+            if (phoneNumber != null) phoneText.setText(phoneNumber)
+            if (birthDate != null) birthdayText.setText(birthDate)
+            genderSelector.onItemSelectedListener = SpinnerListener(this)
+            createNotificationChannel(key.locationChannelId, "Location Channel")
+            createNotificationChannel(key.uploadChannelId, "Upload Channel")
         }
-        else setContentView(R.layout.activity_main)
-        //setContentView(R.layout.activity_main)
-        ////////////////////////////////////////////////////////////
-        nameText.setText(database.getString("name"))
-        phoneText.setText(database.getString("phoneNumber"))
-        birthdayText.setText(database.getString("birthDate"))
-        genderSelector.onItemSelectedListener = SpinnerListener(this)
-        ////////////////////////////////////////////////////////////////////////////
         askForPermissions()
-        createNotificationChannel(key.locationChannelId, "Location Channel")
-        createNotificationChannel(key.uploadChannelId, "Upload Channel")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!registered) YoYo.with(Techniques.BounceInDown)
+            .duration(1000)
+            .delay(500)
+            .playOn(appLogo)
     }
 
     ////////////////////////////////////////////////////////////////////
@@ -62,6 +74,9 @@ class MainActivity : AppCompatActivity() {
         if (!isAnyFieldEmpty()) {
             progressBar.visibility = View.VISIBLE
             formLayout.alpha = 0.3f
+            YoYo.with(Techniques.BounceInUp)
+                .duration(700)
+                .playOn(progressBar)
             saveUserData()
             val userData = networkActivity.userDataObject(
                 phoneNumber = database.getString("phoneNumber"),
@@ -110,7 +125,11 @@ class MainActivity : AppCompatActivity() {
                 database.putBoolean("registered", true)
                 try {
                     val registered = response.getBoolean("success")
-                    if (registered) Toast.makeText(this, "Registration Complete", Toast.LENGTH_LONG).show()
+                    if (registered) Toast.makeText(
+                        this,
+                        "Registration Complete",
+                        Toast.LENGTH_LONG
+                    ).show()
                 } catch (e: JSONException) {
                 }
                 Log.d("corona", response.toString())
@@ -121,6 +140,18 @@ class MainActivity : AppCompatActivity() {
             },
             Response.ErrorListener { error ->
                 Log.d("corona", error.toString())
+                var message = "Something Went Wrong"
+                when (error) {
+                    is NetworkError -> message = "Please Turn on Internet"
+                    is ServerError -> message = "Server not Found"
+                    is AuthFailureError -> message = "Authentication Failed"
+                    is ParseError -> message = "Parsing Error"
+                    is NoConnectionError -> message = "No Connection"
+                    is TimeoutError -> message = "Request Timed Out"
+                }
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                progressBar.visibility = View.GONE
+                formLayout.alpha = 1.0f
             }
         )
         queue.add(request)
