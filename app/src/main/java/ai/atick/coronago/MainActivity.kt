@@ -40,12 +40,12 @@ class MainActivity : AppCompatActivity() {
         database = AppDatabase(this)
         //////////////////////////////////////////////////
         registered = database.getBoolean("registered")
-//        if (registered) {
-//            startActivity(Intent(this, HomeActivity::class.java))
-//            finish()
-//        }
-//        else setContentView(R.layout.activity_main)
-        setContentView(R.layout.activity_main)
+        if (registered) {
+            startActivity(Intent(this, HomeActivity::class.java))
+            finish()
+        }
+        else setContentView(R.layout.activity_main)
+        //setContentView(R.layout.activity_main)
         ////////////////////////////////////////////////////////////
         nameText.setText(database.getString("name"))
         phoneText.setText(database.getString("phoneNumber"))
@@ -57,6 +57,7 @@ class MainActivity : AppCompatActivity() {
         createNotificationChannel(key.uploadChannelId, "Upload Channel")
     }
 
+    ////////////////////////////////////////////////////////////////////
     fun registerUser(@Suppress("UNUSED_PARAMETER") v: View) {
         if (!isAnyFieldEmpty()) {
             progressBar.visibility = View.VISIBLE

@@ -36,7 +36,7 @@ class UploadWork(private val context: Context, workerParameters: WorkerParameter
         )
         Log.d("corona", "My Data: $locationDataObject")
         /////////////////////////////////////////////////////////////////////////////////////////
-        if (registered) networkActivity.postDataBackground(key.locationUrl, locationDataObject)
+        if (registered && locationDataObject.length() > 0) networkActivity.postDataBackground(key.locationUrl, locationDataObject)
         /////////////////////////////////////////////////////////////////////////////////////////
         val builder = NotificationCompat.Builder(context, key.uploadChannelId)
             .setSmallIcon(R.drawable.location)

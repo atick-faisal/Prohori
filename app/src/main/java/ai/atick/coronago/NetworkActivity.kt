@@ -7,11 +7,13 @@ import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 
 class NetworkActivity(private val context: Context) {
 
     private val database: AppDatabase = AppDatabase(context)
+    private var uploadSuccessful = false
 
     fun userDataObject(
         phoneNumber: String,
@@ -54,7 +56,9 @@ class NetworkActivity(private val context: Context) {
         val request = JsonObjectRequest(
             Request.Method.POST, url, data,
             Response.Listener<JSONObject> { response ->
-                //cleanDatabase()
+                try { uploadSuccessful = response.getBoolean("success") }
+                catch (e: JSONException) {}
+                if (uploadSuccessful) cleanDatabase()
                 Log.d("corona", response.toString())
             },
             Response.ErrorListener { error ->

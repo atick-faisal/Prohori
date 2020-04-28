@@ -72,7 +72,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         mapView.onCreate(mapViewBundle)
         mapView.getMapAsync(this)
         getData(key.userUrl + "/" + database.getString("phoneNumber"))
-        //workActivity.createPeriodicTasks()
+        workActivity.createPeriodicTasks()
     }
 
     //////////////////////////////////////////////////////////////////
@@ -100,6 +100,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     ///////////////////////////////////////////////////////////
     fun requestLocationUpdate(@Suppress("UNUSED_PARAMETER") v: View) {
+        Toast.makeText(this, "Updating Location", Toast.LENGTH_SHORT).show()
         val locationRequest = LocationRequest.create()?.apply {
             interval = 10000
             fastestInterval = 5000
